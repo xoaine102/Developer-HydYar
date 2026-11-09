@@ -1,0 +1,256 @@
+// Developer HydYar — database schema (PostgreSQL + Prisma)
+// Frozen contract. Backend owns migrations; docs-data owns seed content.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum DocKind {
+  LEARNING
+  APPLICATION
+}
+
+enum SuggestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  bio          String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+  projects      Project[]
+  posts         ForumPost[]
+  comments      Comment[]
+  chatMessages  ChatMessage[]
+  suggestions   DocSuggestion[]
+  progress      LearningProgress[]
+  favorites     FavoriteDoc[]
+  executions    ExecutionLog[]
+  reportsFiled  PostReport[]
+  likes         PostLike[] // added: opposite side of PostLike.user (schema was missing it; required for prisma validate)
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  language    String        @default("javascript")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files       ProjectFile[]
+  posts       ForumPost[]
+
+  @@index([userId])
+}
+
+model ProjectFile {
+  id        String   @id @default(cuid())
+  projectId String
+  path      String // e.g. "src/index.js" or "index.html"
+  content   String   @default("")
+  language  String?  // inferred from path; override allowed
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, path])
+  @@index([projectId])
+}
+
+// --- Knowledge system ---
+
+model LearningDoc {
+  id        String   @id @default(cuid())
+  lang      String   // e.g. "javascript", "python"
+  slug      String
+  title     String
+  level     String   @default("beginner") // beginner|intermediate|advanced
+  orderIdx  Int      @default(0)
+  summary   String?
+  content   String   // markdown; headings drive TOC
+  related   String?  // comma-separated slugs
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  progress  LearningProgress[]
+  favorites FavoriteDoc[]
+
+  @@unique([lang, slug])
+  @@index([lang])
+}
+
+model AppDocEntry {
+  id          String   @id @default(cuid())
+  lang        String
+  category    String   // e.g. "syntax", "functions", "operators"
+  component   String   // the syntax/function shown in col 1 (copyable)
+  rule        String   // col 2: position, structure, conditions, limits — must be detailed
+  explanation String   // col 3: what it does / meaning
+  example     String   // col 4: real runnable code
+  exampleNote String?  // col 4 note: which placeholder values to replace
+  orderIdx    Int      @default(0)
+
+  @@index([lang, category])
+}
+
+model DocSuggestion {
+  id         String           @id @default(cuid())
+  userId     String
+  kind       DocKind
+  lang       String
+  title      String
+  content    String           // markdown (learning) or JSON fields (application)
+  status     SuggestionStatus @default(PENDING)
+  feedback   String?
+  reviewerId String?
+  reviewedAt DateTime?
+  createdAt  DateTime         @default(now())
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model FavoriteDoc {
+  userId String
+  docId  String
+  addedAt DateTime @default(now())
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doc    LearningDoc @relation(fields: [docId], references: [id], onDelete: Cascade)
+  @@id([userId, docId])
+}
+
+model LearningProgress {
+  userId    String
+  docId     String
+  completed Boolean  @default(false)
+  percent   Int      @default(0)
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doc       LearningDoc @relation(fields: [docId], references: [id], onDelete: Cascade)
+  @@id([userId, docId])
+}
+
+// --- Community ---
+
+model ForumPost {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  content     String
+  codeSnippet String?
+  language    String?
+  projectId   String?
+  tags        String[]
+  createdAt   DateTime  @default(now())
+  editedAt    DateTime?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  comments    Comment[]
+  likes       PostLike[]
+  reports     PostReport[]
+
+  @@index([userId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  parentId  String?  // for replies
+  content   String
+  codeSnippet String?
+  createdAt DateTime @default(now())
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+
+  @@index([postId])
+}
+
+model PostLike {
+  userId String
+  postId String
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  @@id([userId, postId])
+}
+
+model PostReport {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  reason    String
+  status    String   @default("open") // open|resolved|dismissed
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model ChatRoom {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  description String?
+  createdAt   DateTime      @default(now())
+  messages    ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  roomId    String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+}
+
+// --- Execution history (audit, not state) ---
+
+model ExecutionLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  language  String
+  runtime   String   // local|server
+  status    String   // queued|running|success|error|timeout|killed
+  output    String?
+  durationMs Int?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}

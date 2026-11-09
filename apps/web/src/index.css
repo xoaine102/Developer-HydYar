@@ -1,0 +1,277 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== DESIGN TOKENS (frozen — implement exactly) ===== */
+:root {
+  --bg: linear-gradient(160deg, #eef3ff 0%, #f3eeff 55%, #edebff 100%);
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-2: #f1eeff;
+  --border: #c9c4f0;
+  --text: #1e1b3a;
+  --text-muted: #5b5780;
+  --accent-blue: #6fa8ff;
+  --accent-purple: #8f7cff;
+  --code-bg: #1e1b3a;
+  --brand-gradient: linear-gradient(135deg, #6fa8ff, #8f7cff);
+  --danger: #e05577;
+  --success: #3bb273;
+  --warning: #e8a33d;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: linear-gradient(160deg, #171838 0%, #1f1a3d 55%, #241b45 100%);
+  --surface: rgba(30, 28, 60, 0.72);
+  --surface-2: #2a2550;
+  --border: #3b3570;
+  --text: #eceaff;
+  --text-muted: #a7a2d0;
+  --accent-blue: #6fa8ff;
+  --accent-purple: #8f7cff;
+  --code-bg: #0f0e24;
+  --brand-gradient: linear-gradient(135deg, #6fa8ff, #8f7cff);
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.scroll-locked {
+  overflow: hidden;
+}
+
+@layer components {
+  .brand-gradient {
+    background: var(--brand-gradient);
+  }
+  .brand-text {
+    background: var(--brand-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .surface-card {
+    background: var(--surface);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .btn-primary {
+    background: var(--brand-gradient);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 0.55rem 1.1rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    box-shadow: 0 6px 18px rgba(111, 168, 255, 0.35);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(143, 124, 255, 0.4);
+  }
+  .btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-ghost {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    transition: background 0.15s ease;
+  }
+  .btn-ghost:hover {
+    background: var(--surface-2);
+  }
+  .input-field {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.6rem 0.85rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input-field:focus {
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 0 3px rgba(143, 124, 255, 0.2);
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    transition: background 0.15s ease, color 0.15s ease;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+  }
+  .nav-item:hover {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .nav-item.active {
+    background: var(--brand-gradient);
+    color: #fff;
+    font-weight: 600;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-muted);
+  }
+}
+
+/* Markdown / doc content */
+.doc-content {
+  line-height: 1.75;
+  font-size: 1rem;
+}
+.doc-content h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 1.5rem 0 0.75rem;
+  scroll-margin-top: 90px;
+}
+.doc-content h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 1.4rem 0 0.6rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: 90px;
+}
+.doc-content h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 1.2rem 0 0.5rem;
+  scroll-margin-top: 90px;
+}
+.doc-content p {
+  margin: 0.6rem 0;
+}
+.doc-content ul,
+.doc-content ol {
+  margin: 0.6rem 0;
+  padding-left: 1.4rem;
+}
+.doc-content li {
+  margin: 0.25rem 0;
+}
+.doc-content a {
+  color: var(--accent-blue);
+  text-decoration: underline;
+}
+.doc-content code:not(pre code) {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.85em;
+}
+.doc-content pre {
+  background: var(--code-bg);
+  color: #eceaff;
+  padding: 1rem;
+  border-radius: 12px;
+  overflow-x: auto;
+  margin: 0.8rem 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.doc-content blockquote {
+  border-left: 3px solid var(--accent-purple);
+  padding: 0.4rem 1rem;
+  margin: 0.8rem 0;
+  background: var(--surface-2);
+  border-radius: 0 10px 10px 0;
+  color: var(--text-muted);
+}
+.doc-content table {
+  border-collapse: collapse;
+  margin: 0.8rem 0;
+  width: 100%;
+}
+.doc-content th,
+.doc-content td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+/* Scrollbars */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Overlay peek strip */
+.overlay-peek {
+  position: fixed;
+  width: 8px;
+  background: var(--brand-gradient);
+  z-index: 60;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* xterm overrides */
+.xterm .xterm-viewport {
+  background: transparent !important;
+}
+
+/* Monaco container */
+.monaco-container {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+}
+
+/* Toast animations */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.toast-item {
+  animation: toast-in 0.2s ease;
+}
